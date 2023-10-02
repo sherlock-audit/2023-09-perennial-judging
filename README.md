@@ -410,6 +410,20 @@ if (!depositAssets.isZero() || !redeemShares.isZero())
 
 Fixed in: https://github.com/equilibria-xyz/perennial-v2/pull/111.
 
+**panprog**
+
+1. `Vault(user,0,0,0)` increasing `checkpoint.count` (medium severity) - fixed
+2. Any user who is claiming still increases `checkpoint.count`, although he pays for the claim fully and doesn't participate in paying the keeper fee for deposit/redeem, thus he shouldn't increase `checkpoint.count` (low severity) - not fixed
+
+
+**kbrizzle**
+
+Since (2) is overcharging the fee instead of undercharging (claim pays entire settlement fee instead of splitting the resulting fee with others in version), we're going to leave this as-is. We'll make a note of this in case we improve the claiming flow in the future.
+
+**jacksanford1**
+
+Based on @kbrizzle's comment, Sherlock will consider the issue brought up in #2 in the comment above by panprog as acknowledged. 
+
 # Issue M-4: MultiInvoker liquidation action will revert most of the time due to incorrect closable amount initialization 
 
 Source: https://github.com/sherlock-audit/2023-09-perennial-judging/issues/44 
@@ -569,6 +583,10 @@ Agree, didn't think about it but indeed it's not possible to make them equal. St
 
 Since it can still happen but only in certain edge case, this should be downgraded to medium.
 
+**panprog**
+
+Fixed
+
 # Issue M-5: MultiInvoker liquidation action will revert due to incorrect closable amount calculation for invalid oracle versions 
 
 Source: https://github.com/sherlock-audit/2023-09-perennial-judging/issues/45 
@@ -702,6 +720,10 @@ However, if the `Market` bug is fixed the way I proposed it (by changing `invali
 
 Fixed: https://github.com/equilibria-xyz/perennial-v2/pull/103
 
+**panprog**
+
+Fixed
+
 # Issue M-6: Invalid oracle version can cause the vault to open too large and risky position and get liquidated due to using unadjusted global current position 
 
 Source: https://github.com/sherlock-audit/2023-09-perennial-judging/issues/55 
@@ -791,4 +813,32 @@ Adjust global current position after loading it:
 Fixed in: https://github.com/equilibria-xyz/perennial-v2/pull/109.
 
 Please note there were additional pending positions that required adjustment.
+
+**panprog**
+
+Fixed
+
+# Issue M-7: [Perennial Self Review] Incorrect price used during liquidation calculation 
+
+Source: https://github.com/sherlock-audit/2023-09-perennial-judging/issues/59 
+
+## Found by 
+Protocol Team
+Fixed by https://github.com/equilibria-xyz/perennial-v2/pull/108
+
+
+
+## Discussion
+
+**panprog**
+
+Fixed but when combined with #9, the liquidation will revert due to the fix (#9 will make oracle.latest().price = 0 and this will be used by the fix, while the correct `Market` process will use the latest valid oracle price in this case). The probability of this situation is very low, but still possible.
+
+**kbrizzle**
+
+Noted: we made this intentional decision since liquidations are generally predicated on posting a valid non-requested price anyways.
+
+**jacksanford1**
+
+Based on @kbrizzle's comment, Sherlock will consider this issue as acknowledged due to a very low but still possible potential for reverting. 
 
